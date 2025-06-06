@@ -1,9 +1,11 @@
-from openai._streaming import Stream
-from openai.types.chat.chat_completion_chunk import ChatCompletionChunk
-
-
 import json
 from typing import Any, Callable, TypedDict
+
+from openai._streaming import Stream
+from openai.types.chat.chat_completion_chunk import ChatCompletionChunk
+from openai.types.chat.chat_completion_tool_param import ChatCompletionToolParam
+
+ToolsDict = dict[str, tuple[ChatCompletionToolParam, Callable[..., Any]]]  # pyright: ignore[reportExplicitAny]
 
 
 class DraftToolCall(TypedDict):
@@ -14,7 +16,7 @@ class DraftToolCall(TypedDict):
 
 def stream_text(
     stream: Stream[ChatCompletionChunk],
-    available_tools: dict[str, Callable[..., Any]],  # pyright: ignore[reportExplicitAny]
+    tools: ToolsDict,
 ):
     draft_tool_calls: list[DraftToolCall] = []
     draft_tool_calls_index = -1
@@ -33,7 +35,7 @@ def stream_text(
                     )
 
                 for tool_call in draft_tool_calls:
-                    tool_result = available_tools[tool_call["name"]](  # pyright: ignore[reportAny]
+                    tool_result = tools[tool_call["name"]][1](  # pyright: ignore[reportAny]
                         **json.loads(tool_call["arguments"])
                     )
 
