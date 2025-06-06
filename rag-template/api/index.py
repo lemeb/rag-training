@@ -1,5 +1,5 @@
 import os
-from typing import Any, Callable
+from typing import Any, Callable, Literal
 
 from dotenv import load_dotenv
 from fastapi import FastAPI
@@ -75,9 +75,21 @@ class DraftToolCall(TypedDict):
     arguments: str
 
 
+########################################################################
+# USE THIS TO CONTROL WHICH VERSION OF THE CHATBOT YOU WANT TO USE
+# 0 = no tools at all, simple chatbot
+# 1 = with one tool (get_current_weather)
+#########################################################################
+
+STEP: Literal[0, 1] = 1
+
+
 @app.post("/api/chat")
 async def handle_chat_data(request: Request):
-    tools_to_use = ["get_current_weather"]
+    if STEP == 0:
+        tools_to_use = []
+    elif STEP == 1:
+        tools_to_use = ["get_current_weather"]
     tools = {
         tool_name: available_tools[tool_name]
         for tool_name in tools_to_use
