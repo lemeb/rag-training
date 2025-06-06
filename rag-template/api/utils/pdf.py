@@ -8,6 +8,7 @@ from langchain_openai import OpenAIEmbeddings
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 
 _ = load_dotenv(".env.local")
+_ = load_dotenv("../.env")
 
 embeddings = OpenAIEmbeddings(model="text-embedding-3-large")
 

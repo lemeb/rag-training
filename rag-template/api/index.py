@@ -20,7 +20,45 @@ from .utils.stream import stream_text
 from .utils.tools import duckduckgo_search, get_current_weather
 from .utils.agent import do_research_agent
 
+###############################################################################
+# USE THIS TO CONTROL WHICH VERSION OF THE CHATBOT YOU WANT TO USE
+# 0 = Simple chatbot
+#     Will do well with prompt: "What is the capital of France?"
+#     Will not do well with: "what is the weather in Paris?"
+#
+# 1 = RAG with web search (without any tools)
+#     Will do well with prompt: "What is the weather in Paris?"
+#     Will not do well with: "What does the book say about Charles I?"
+#
+# 2 = RAG with similary search (without any tools)
+#     Will do well with prompt: "What does the book say about Charles I?"
+#     Will not do well with: "What is the weather in Paris?"
+#
+# 3 = RAG with similarity search and query refinement
+#     The difference with STEP 2 is that the query is refined by a LLM call
+#     Will do well with prompt: "What does the book say about Charles I?"
+#     Will not do well with: "What is the weather in Paris?"
+#
+# 4 = Function calling with one tool (get_current_weather)
+#     Will do well with prompt: "What is the weather in Paris?"
+#     Will not do well with: "What does the book say about Charles I?"
+#
+# 5 = Function calling with multiple tools
+#     Should do well with prompts about both weather, book content, and search
+#
+# 6 = Research agent
+#     The result will appear in the terminal, not in the chat.
+#     Try a query like "What does the book say about catholicism, anglicanism,
+#     and protestantism in England? And what other scholarship can be good
+#     further reading on this topic?"
+###############################################################################
+
+STEP: Literal[0, 1, 2, 3, 4, 5, 6] = 0
+
+###############################################################################
+
 _ = load_dotenv(".env.local")
+_ = load_dotenv("../.env")
 
 app = FastAPI()
 
@@ -127,42 +165,6 @@ def do_stream(
     )
 
     return stream
-
-
-########################################################################
-# USE THIS TO CONTROL WHICH VERSION OF THE CHATBOT YOU WANT TO USE
-# 0 = Simple chatbot
-#     Will do well with prompt: "What is the capital of France?"
-#     Will not do well with: "what is the weather in Paris?"
-#
-# 1 = RAG with web search (without any tools)
-#     Will do well with prompt: "What is the weather in Paris?"
-#     Will not do well with: "What does the book say about Charles I?"
-#
-# 2 = RAG with similary search (without any tools)
-#     Will do well with prompt: "What does the book say about Charles I?"
-#     Will not do well with: "What is the weather in Paris?"
-#
-# 3 = RAG with similarity search and query refinement
-#     The difference with STEP 2 is that the query is refined by a LLM call
-#     Will do well with prompt: "What does the book say about Charles I?"
-#     Will not do well with: "What is the weather in Paris?"
-#
-# 4 = Function calling with one tool (get_current_weather)
-#     Will do well with prompt: "What is the weather in Paris?"
-#     Will not do well with: "What does the book say about Charles I?"
-#
-# 5 = Function calling with multiple tools
-#     Should do well with prompts about both weather, book content, and web search
-#
-# 6 = Research agent
-#     The result will appear in the terminal, not in the chat.
-#     Try a query like "What does the book say about catholicism, anglicanism,
-#     and protestantism in England? And what other scholarship can be good
-#     further reading on this topic?"
-#########################################################################
-
-STEP: Literal[0, 1, 2, 3, 4, 5, 6] = 6
 
 
 @app.post("/api/chat")
