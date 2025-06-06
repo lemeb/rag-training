@@ -1,6 +1,9 @@
+from typing import Any
+
 import requests
 
-def get_current_weather(latitude, longitude):
+
+def get_current_weather(latitude: float, longitude: float) -> dict[str, Any] | None:  # pyright: ignore[reportExplicitAny]
     # Format the URL with proper parameter substitution
     url = f"https://api.open-meteo.com/v1/forecast?latitude={latitude}&longitude={longitude}&current=temperature_2m&hourly=temperature_2m&daily=sunrise,sunset&timezone=auto"
 
@@ -12,7 +15,7 @@ def get_current_weather(latitude, longitude):
         response.raise_for_status()
 
         # Return the JSON response
-        return response.json()
+        return response.json()  # pyright: ignore[reportAny]
 
     except requests.RequestException as e:
         # Handle any errors that occur during the request
