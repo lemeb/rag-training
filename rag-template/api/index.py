@@ -10,10 +10,15 @@ from openai.types.chat.chat_completion_message_param import ChatCompletionMessag
 from pydantic import BaseModel
 
 from .utils.prompt import ClientMessage, convert_to_openai_messages
-from .utils.rag import do_rag_similarity_search, generate_rag_parameters
+from .utils.rag import (
+    do_rag_similarity_search,
+    generate_rag_parameters,
+    similarity_search_pdf,
+)
 from .utils.search import do_duckduckgo_search
 from .utils.stream import stream_text
-from .utils.tools import get_current_weather
+from .utils.tools import duckduckgo_search, get_current_weather
+from .utils.agent import do_research_agent
 
 _ = load_dotenv(".env.local")
 
@@ -94,8 +99,8 @@ similarity_search_fn_def: ChatCompletionToolParam = {
 ToolsDict = dict[str, tuple[ChatCompletionToolParam, Callable[..., Any]]]  # pyright: ignore[reportExplicitAny]
 available_tools: ToolsDict = {
     "get_current_weather": (get_current_weather_fn_def, get_current_weather),
-    "duckduckgo_search": (duckduckgo_search_fn_def, do_duckduckgo_search),
-    "similarity_search_pdf": (similarity_search_fn_def, do_rag_similarity_search),
+    "duckduckgo_search": (duckduckgo_search_fn_def, duckduckgo_search),
+    "similarity_search_pdf": (similarity_search_fn_def, similarity_search_pdf),
 }
 
 
@@ -149,9 +154,15 @@ def do_stream(
 #
 # 5 = Function calling with multiple tools
 #     Should do well with prompts about both weather, book content, and web search
+#
+# 6 = Research agent
+#     The result will appear in the terminal, not in the chat.
+#     Try a query like "What does the book say about catholicism, anglicanism,
+#     and protestantism in England? And what other scholarship can be good
+#     further reading on this topic?"
 #########################################################################
 
-STEP: Literal[0, 1, 2, 3, 4, 5] = 2
+STEP: Literal[0, 1, 2, 3, 4, 5, 6] = 6
 
 
 @app.post("/api/chat")
@@ -186,6 +197,14 @@ async def handle_chat_data(request: Request):
                 "duckduckgo_search",
                 "similarity_search_pdf",
             ]
+        case 6:
+            query = get_last_msg_content(messages)
+            messages = do_research_agent(
+                query=query,
+                messages=messages,
+                client=client,
+                available_tools=available_tools,
+            )
 
     tools = {
         tool_name: available_tools[tool_name]
