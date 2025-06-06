@@ -10,9 +10,9 @@ from openai.types.chat.chat_completion_message_param import ChatCompletionMessag
 from pydantic import BaseModel
 
 from .utils.prompt import ClientMessage, convert_to_openai_messages
+from .utils.search import do_duckduckgo_search
 from .utils.stream import stream_text
 from .utils.tools import get_current_weather
-from .utils.search import do_duckduckgo_search
 
 _ = load_dotenv(".env.local")
 
@@ -83,7 +83,11 @@ def do_stream(
 ########################################################################
 # USE THIS TO CONTROL WHICH VERSION OF THE CHATBOT YOU WANT TO USE
 # 0 = Simple chatbot
-# 1 = RAG with research (without any tools)
+#     Will do well with prompt: "What is the capital of France?"
+#     Will not do well with: "what is the weather in Paris?"
+# 1 = RAG with web search (without any tools)
+#     Will do well with prompt: "What is the weather in Paris?"
+#     Will not do well with: "What does the book say about Charles I?"
 # 2 = with one tool (get_current_weather)
 #########################################################################
 

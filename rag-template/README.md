@@ -13,6 +13,13 @@ To run the example locally you need to:
 7. `uv sync` to install the required Python dependencies.
 8. `pnpm dev` to launch the development server.
 
+Note that the RAG pre-processing will _not_ have been done yet! To do so, you should run the  following command:
+
+```bash
+# Run this from the 'rag-template' directory
+uv run python -m api.utils.pdf
+```
+
 ## Learn More
 
 To learn more about the AI SDK or Next.js by Vercel, take a look at the following resources:
