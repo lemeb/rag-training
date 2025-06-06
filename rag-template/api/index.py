@@ -8,11 +8,11 @@ from openai import OpenAI, Stream
 from openai.types.chat import ChatCompletionChunk, ChatCompletionToolParam
 from openai.types.chat.chat_completion_message_param import ChatCompletionMessageParam
 from pydantic import BaseModel
-from typing_extensions import TypedDict
 
 from .utils.prompt import ClientMessage, convert_to_openai_messages
 from .utils.stream import stream_text
 from .utils.tools import get_current_weather
+from .utils.search import do_duckduckgo_search
 
 _ = load_dotenv(".env.local")
 
@@ -55,6 +55,17 @@ available_tools: ToolsDict = {
 }
 
 
+def get_last_msg_content(messages: list[ChatCompletionMessageParam]) -> str:
+    last_msg = messages[-1]
+    content = last_msg.get("content", "")
+    if content is None:
+        return ""
+    elif not isinstance(content, str):
+        return (" ").join([part.get("text", "") for part in content])
+    else:
+        return content
+
+
 def do_stream(
     messages: list[ChatCompletionMessageParam],
     tools: ToolsDict,
@@ -69,36 +80,40 @@ def do_stream(
     return stream
 
 
-class DraftToolCall(TypedDict):
-    id: str
-    name: str
-    arguments: str
-
-
 ########################################################################
 # USE THIS TO CONTROL WHICH VERSION OF THE CHATBOT YOU WANT TO USE
-# 0 = no tools at all, simple chatbot
-# 1 = with one tool (get_current_weather)
+# 0 = Simple chatbot
+# 1 = RAG with research (without any tools)
+# 2 = with one tool (get_current_weather)
 #########################################################################
 
-STEP: Literal[0, 1] = 1
+STEP: Literal[0, 1, 2] = 2
 
 
 @app.post("/api/chat")
 async def handle_chat_data(request: Request):
-    if STEP == 0:
-        tools_to_use = []
-    elif STEP == 1:
-        tools_to_use = ["get_current_weather"]
+    messages = request.messages
+    messages = convert_to_openai_messages(messages)
+    tools_to_use: list[str] = []
+
+    match STEP:
+        case 0:
+            pass
+        case 1:
+            messages = do_duckduckgo_search(
+                query=get_last_msg_content(messages),
+                messages=messages,
+            )
+            print("DUCKDUCKGO SEARCH RESULTS:", messages[-1].get("content", ""))
+        case 2:
+            tools_to_use = ["get_current_weather"]
+
     tools = {
         tool_name: available_tools[tool_name]
         for tool_name in tools_to_use
         if tool_name in available_tools
     }
-
-    messages = request.messages
-    openai_messages = convert_to_openai_messages(messages)
-    stream = do_stream(messages=openai_messages, tools=tools)
+    stream = do_stream(messages=messages, tools=tools)
     response = StreamingResponse(stream_text(stream, tools))
     response.headers["x-vercel-ai-data-stream"] = "v1"
     return response

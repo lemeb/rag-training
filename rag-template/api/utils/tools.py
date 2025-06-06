@@ -1,6 +1,11 @@
 from typing import Any
 
 import requests
+from duckduckgo_search import DDGS
+
+
+def duckduckgo_search(query: str) -> list[dict[str, str]]:
+    return DDGS().text(query, max_results=20)
 
 
 def get_current_weather(latitude: float, longitude: float) -> dict[str, Any] | None:  # pyright: ignore[reportExplicitAny]
