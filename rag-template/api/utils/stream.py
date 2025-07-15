@@ -1,6 +1,7 @@
 import json
 from typing import Any, Callable, TypedDict
 
+from langchain_core.utils import try_load_from_hub
 from openai._streaming import Stream
 from openai.types.chat.chat_completion_chunk import ChatCompletionChunk
 from openai.types.chat.chat_completion_tool_param import ChatCompletionToolParam
@@ -39,11 +40,16 @@ def stream_text(
                         **json.loads(tool_call["arguments"])
                     )
 
+                    try:
+                        result = json.dumps(tool_result)
+                    except Exception as e:
+                        result = str(e)
+
                     yield 'a:{{"toolCallId":"{id}","toolName":"{name}","args":{args},"result":{result}}}\n'.format(
                         id=tool_call["id"],
                         name=tool_call["name"],
                         args=tool_call["arguments"],
-                        result=json.dumps(tool_result),
+                        result=result,
                     )
 
             elif choice.delta.tool_calls:
