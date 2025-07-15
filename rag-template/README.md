@@ -25,6 +25,11 @@ The way to use the template is to edit the `api/index.py` file and to modify the
 - 5: A chatbot that can use multiple tools (web search, similarity search, weather API)
 - 6: A research agent leveraging web search and similarity search
 
+### If DuckDuckGo is not working
+
+If DuckDuckGo does not perform search (because of rate limiting), you can
+use [Exa](https://exa.ai/) as an alternative. To do so, you need to sign up for an account and then add your API key as `EXA_API_KEY` to the `.env` file in the root directory of the project.
+
 ## Don't forget to run the RAG pre-processing!
 
 Note that the RAG pre-processing will _not_ have been done yet! To do so, you should run the  following command:

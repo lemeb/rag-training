@@ -448,6 +448,20 @@ wheels = [
 ]
 
 [[package]]
+name = "exa-py"
+version = "1.9.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "openai" },
+    { name = "requests" },
+    { name = "typing-extensions" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/cf/6e/58f0676c64494e2154a58f08843b0466ca07cbd62960d50e94478b03cb57/exa_py-1.9.0.tar.gz", hash = "sha256:a4ba76f9b44072248cf3369e88bb801061da2ba713b7f712b155ad62660b27de", size = 12115 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/9a/da/555713b4269858f4fed4bfd70d1d34de3a1bdafa9b2f3e4efefab43d4a6f/exa_py-1.9.0-py3-none-any.whl", hash = "sha256:3aace8d0cf0d1e3a70839f22e45d1296ce259b5fa50262ebfa85a0fe8e9cf778", size = 12533 },
+]
+
+[[package]]
 name = "fastapi"
 version = "0.111.1"
 source = { registry = "https://pypi.org/simple" }
@@ -1821,6 +1835,7 @@ dependencies = [
     { name = "dnspython" },
     { name = "duckduckgo-search" },
     { name = "email-validator" },
+    { name = "exa-py" },
     { name = "fastapi" },
     { name = "fastapi-cli" },
     { name = "h11" },
@@ -1871,6 +1886,7 @@ requires-dist = [
     { name = "dnspython", specifier = "==2.6.1" },
     { name = "duckduckgo-search", specifier = ">=7.2.1" },
     { name = "email-validator", specifier = "==2.2.0" },
+    { name = "exa-py", specifier = ">=1.9.0" },
     { name = "fastapi", specifier = "==0.111.1" },
     { name = "fastapi-cli", specifier = "==0.0.4" },
     { name = "h11", specifier = "==0.14.0" },

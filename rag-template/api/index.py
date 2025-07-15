@@ -8,6 +8,7 @@ from openai import OpenAI, Stream
 from openai.types.chat import ChatCompletionChunk, ChatCompletionToolParam
 from openai.types.chat.chat_completion_message_param import ChatCompletionMessageParam
 from pydantic import BaseModel
+from duckduckgo_search.exceptions import DuckDuckGoSearchException
 
 from .utils.prompt import ClientMessage, convert_to_openai_messages
 from .utils.rag import (
@@ -15,9 +16,9 @@ from .utils.rag import (
     generate_rag_parameters,
     similarity_search_pdf,
 )
-from .utils.search import do_duckduckgo_search
+from .utils.search import do_duckduckgo_search, do_exa_search
 from .utils.stream import stream_text
-from .utils.tools import duckduckgo_search, get_current_weather
+from .utils.tools import duckduckgo_search, exa_search, get_current_weather
 from .utils.agent import do_research_agent
 
 ###############################################################################
@@ -30,7 +31,7 @@ from .utils.agent import do_research_agent
 #     Will do well with prompt: "What is the weather in Paris?"
 #     Will not do well with: "What does the book say about Charles I?"
 #
-# 2 = RAG with similary search (without any tools)
+# 2 = RAG with similarity search (without any tools)
 #     Will do well with prompt: "What does the book say about Charles I?"
 #     Will not do well with: "What is the weather in Paris?"
 #
@@ -53,7 +54,7 @@ from .utils.agent import do_research_agent
 #     further reading on this topic?"
 ###############################################################################
 
-STEP: Literal[0, 1, 2, 3, 4, 5, 6] = 0
+STEP: Literal[0, 1, 2, 3, 4, 5, 6] = 6
 
 ###############################################################################
 
@@ -111,6 +112,24 @@ duckduckgo_search_fn_def: ChatCompletionToolParam = {
     },
 }
 
+exa_search_fn_def: ChatCompletionToolParam = {  
+    "type": "function",
+    "function": {
+        "name": "exa_search",
+        "description": "Searches the web (through Exa) for the given query and returns a list of results",
+        "parameters": {
+            "type": "object",
+            "required": ["query"],
+            "properties": {
+                "query": {
+                    "type": "string",
+                    "description": "The search query to look for on Exa",
+                }
+            },
+        },
+    },
+}
+
 similarity_search_fn_def: ChatCompletionToolParam = {
     "type": "function",
     "function": {
@@ -139,6 +158,7 @@ available_tools: ToolsDict = {
     "get_current_weather": (get_current_weather_fn_def, get_current_weather),
     "duckduckgo_search": (duckduckgo_search_fn_def, duckduckgo_search),
     "similarity_search_pdf": (similarity_search_fn_def, similarity_search_pdf),
+    "exa_search": (exa_search_fn_def, exa_search),
 }
 
 
@@ -177,11 +197,20 @@ async def handle_chat_data(request: Request):
         case 0:
             pass
         case 1:
-            messages = do_duckduckgo_search(
-                query=get_last_msg_content(messages),
-                messages=messages,
-            )
-            print("DUCKDUCKGO SEARCH RESULTS:", messages[-1].get("content", ""))
+            query = get_last_msg_content(messages)
+            try:
+                messages = do_duckduckgo_search(
+                    query=query,
+                    messages=messages,
+                )
+                print("DUCKDUCKGO SEARCH RESULTS:", messages[-1].get("content", ""))
+            except DuckDuckGoSearchException as e:
+                print("DUCKDUCKGO SEARCH ERROR:", e)
+                messages = do_exa_search(
+                    query=query,
+                    messages=messages,
+                )
+                print("EXA SEARCH RESULTS:", messages[-1].get("content", ""))
         case 2:
             query = get_last_msg_content(messages)
             messages = do_rag_similarity_search(messages=messages, query=query, k=10)
@@ -196,7 +225,7 @@ async def handle_chat_data(request: Request):
         case 5:
             tools_to_use = [
                 "get_current_weather",
-                "duckduckgo_search",
+                "exa_search",
                 "similarity_search_pdf",
             ]
         case 6:

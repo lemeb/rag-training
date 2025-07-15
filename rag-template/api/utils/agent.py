@@ -25,6 +25,7 @@ def research_agent(query: str, client: OpenAI, available_tools: ToolsDict) -> st
         "requests. After this is done, generate a long message with all the"
         "relevant information. Don't hesitate to pass "
         "a long-ish answer; the main agent will create a synthesis."
+        "If DuckDuckGo is not working, use Exa instead."
     )
     stop = False
     messages: list[ResponseInputItemParam] = [
@@ -42,23 +43,41 @@ def research_agent(query: str, client: OpenAI, available_tools: ToolsDict) -> st
             store=True,
             reasoning=Reasoning(summary="detailed"),
             tools=[
-                FunctionToolParam(
-                    type="function",
-                    name="duckduckgo_search",
-                    description="Searches DuckDuckGo for the given query and returns a list of results",
-                    parameters={
-                        "type": "object",
-                        "required": ["query"],
-                        "properties": {
-                            "query": {
-                                "type": "string",
-                                "description": "The search query to look for on DuckDuckGo",
-                            }
-                        },
-                        "additionalProperties": False,
-                    },
-                    strict=True,
-                ),
+                {"type": "web_search_preview"},
+                # FunctionToolParam(
+                #     type="function",
+                #     name="duckduckgo_search",
+                #     description="Searches DuckDuckGo for the given query and returns a list of results",
+                #     parameters={
+                #         "type": "object",
+                #         "required": ["query"],
+                #         "properties": {
+                #             "query": {
+                #                 "type": "string",
+                #                 "description": "The search query to look for on DuckDuckGo",
+                #             }
+                #         },
+                #         "additionalProperties": False,
+                #     },
+                #     strict=True,
+                # ),
+                # FunctionToolParam(
+                #     name="exa_search",
+                #     description="Performs a search on Exa",
+                #     strict=True,
+                #     type="function",
+                #     parameters={
+                #         "type": "object",
+                #         "required": ["query"],
+                #         "properties": {
+                #             "query": {
+                #                 "type": "string",
+                #                 "description": "The search query to look for on Exa",
+                #             }
+                #         },
+                #         "additionalProperties": False,
+                #     },
+                # ),
                 FunctionToolParam(
                     name="similarity_search_pdf",
                     description="Performs similarity search in PDF documents based on a query.",
