@@ -112,9 +112,14 @@ def research_agent(query: str, client: OpenAI, available_tools: ToolsDict) -> st
             print(f"🛞 Tool calls:\n{tool_calls}\n")
             for tool_call in tool_calls:
                 tool_call_call_id = tool_call.call_id
-                output = available_tools[tool_call.name][1](
-                    **json.loads(tool_call.arguments)  # pyright: ignore[reportAny]
-                )
+                try:
+                    output = available_tools[tool_call.name][1](  # pyright: ignore[reportAny]
+                        **json.loads(tool_call.arguments)
+                    )
+                except Exception as e:
+                    output = f"Error calling tool {tool_call.name}: {e}"
+                    print(output)
+
                 messages.append(
                     FunctionCallOutput(
                         call_id=tool_call_call_id,
